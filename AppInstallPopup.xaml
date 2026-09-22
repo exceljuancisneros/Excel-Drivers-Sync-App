@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ExcelDriversSync.AppInstallPopup"
+             BackgroundColor="#80000000">
+    <Frame BackgroundColor="White"
+           CornerRadius="15"
+           Padding="0"
+           HasShadow="True"
+           VerticalOptions="Center"
+           HorizontalOptions="FillAndExpand"
+           Margin="30">
+        <VerticalStackLayout Padding="20" Spacing="15">
+            
+            <!-- Title -->
+            <Label Text="App Installation Status"
+                   FontSize="18"
+                   FontAttributes="Bold"
+                   TextColor="#1a237e"
+                   HorizontalOptions="Center" />
+            
+            <!-- Description -->
+            <Label Text="Apps below are checked for installation."
+                   FontSize="12"
+                   TextColor="#666666"
+                   HorizontalOptions="Center"
+                   MaximumWidthRequest="300" />
+            
+            <!-- Scrollable app list -->
+            <ScrollView>
+                <VerticalStackLayout x:Name="AppListContainer" Spacing="10">
+                </VerticalStackLayout>
+            </ScrollView>
+            
+            <!-- Loading overlay -->
+            <Grid x:Name="LoadingOverlay" IsVisible="False" BackgroundColor="#80000000" 
+                  VerticalOptions="FillAndExpand" HorizontalOptions="FillAndExpand">
+                <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="15">
+                    <ActivityIndicator x:Name="LoadingSpinner" IsRunning="True" IsVisible="True" 
+                                       Color="White" WidthRequest="50" HeightRequest="50" />
+                    <Label x:Name="LoadingText" Text="Downloading..." TextColor="White" 
+                           FontSize="16" HorizontalOptions="Center" />
+                </VerticalStackLayout>
+            </Grid>
+            
+            <!-- Close button -->
+            <Button Text="Close"
+                    Clicked="OnCancelClicked"
+                    BackgroundColor="#757575"
+                    TextColor="White"
+                    CornerRadius="8"
+                    Padding="20,10"
+                    FontAttributes="Bold"
+                    HorizontalOptions="Center" />
+            
+        </VerticalStackLayout>
+    </Frame>
+</ContentPage>

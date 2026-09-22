@@ -1,0 +1,82 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:ExcelDriversSync"
+             x:Class="ExcelDriversSync.MainPage"
+             BackgroundColor="White">
+
+    <ScrollView>
+        <VerticalStackLayout
+            Padding="30,60,30,30"
+            Spacing="25"
+            HorizontalOptions="FillAndExpand"
+            VerticalOptions="FillAndExpand">
+            
+            <!-- Title -->
+            <Label
+                Text="Sync Apps"
+                FontSize="32"
+                FontAttributes="Bold"
+                TextColor="#1a237e"
+                HorizontalOptions="Center" />
+
+            <!-- Sync Icon (transparent Button with Unicode arrow) -->
+            <Button
+                x:Name="SyncButton"
+                Text="⟳"
+                FontSize="140"
+                FontFamily="Noto Sans"
+                TextColor="#1a237e"
+                BackgroundColor="Transparent"
+                BorderColor="Transparent"
+                HorizontalOptions="Center"
+                VerticalOptions="Center"
+                Margin="10"
+                Clicked="OnSyncClicked" />
+
+            <!-- Sync Progress (hidden by default) -->
+            <VerticalStackLayout
+                x:Name="ProgressArea"
+                IsVisible="False"
+                HorizontalOptions="FillAndExpand"
+                Spacing="10"
+                Margin="0,20,0,0">
+                
+                <!-- Status Label -->
+                <Label
+                    x:Name="ProgressLabel"
+                    Text="Syncing..."
+                    FontSize="16"
+                    TextColor="#1a237e"
+                    HorizontalOptions="Center" />
+
+                <!-- Progress Bar -->
+                <ProgressBar
+                    x:Name="ProgressBar"
+                    Progress="0"
+                    ProgressColor="#1a237e"
+                    HeightRequest="8"
+                    HorizontalOptions="FillAndExpand" />
+
+                <!-- Percentage -->
+                <Label
+                    x:Name="ProgressPercent"
+                    Text="0%"
+                    FontSize="14"
+                    TextColor="#666666"
+                    HorizontalOptions="Center" />
+            </VerticalStackLayout>
+
+            <!-- Last Sync Time -->
+            <Label
+                x:Name="LastSyncLabel"
+                Text="Last sync: Never"
+                FontSize="14"
+                TextColor="#666666"
+                HorizontalOptions="Center"
+                Margin="0,20,0,0" />
+                
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>
