@@ -33,12 +33,14 @@
             </ScrollView>
             
             <!-- Loading overlay -->
-            <Grid x:Name="LoadingOverlay" IsVisible="False" BackgroundColor="#80000000" 
+            <Grid x:Name="LoadingOverlay" IsVisible="False" BackgroundColor="#80000000"
                   VerticalOptions="FillAndExpand" HorizontalOptions="FillAndExpand">
-                <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="15">
-                    <ActivityIndicator x:Name="LoadingSpinner" IsRunning="True" IsVisible="True" 
+                <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="15" WidthRequest="240">
+                    <ActivityIndicator x:Name="LoadingSpinner" IsRunning="True" IsVisible="True"
                                        Color="White" WidthRequest="50" HeightRequest="50" />
-                    <Label x:Name="LoadingText" Text="Downloading..." TextColor="White" 
+                    <ProgressBar x:Name="DownloadProgressBar" IsVisible="False" Progress="0"
+                                 ProgressColor="White" HeightRequest="8" />
+                    <Label x:Name="LoadingText" Text="Downloading..." TextColor="White"
                            FontSize="16" HorizontalOptions="Center" />
                 </VerticalStackLayout>
             </Grid>

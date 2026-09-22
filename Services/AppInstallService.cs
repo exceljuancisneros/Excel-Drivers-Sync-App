@@ -35,6 +35,21 @@ public class AppInstallService
         _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("ExcelDriversSync");
     }
 
+    /// <summary>Drops the installed-packages cache so the next check reflects reality (e.g. after returning from the system installer).</summary>
+    public void InvalidateInstalledPackagesCache()
+    {
+        _cacheLoaded = false;
+        _installedPackagesCache = null;
+    }
+
+    /// <summary>Ground-truth install status for one package, straight from PackageManager (respects the cache above).</summary>
+    public (bool IsInstalled, long? VersionCode, string? VersionName) GetInstallStatus(string packageName)
+    {
+        var isInstalled = GetInstalledPackages().Contains(packageName);
+        var version = isInstalled ? GetInstalledVersion(packageName) : null;
+        return (isInstalled, version?.VersionCode, version?.VersionName);
+    }
+
     private HashSet<string> GetInstalledPackages()
     {
         if (_cacheLoaded && _installedPackagesCache != null)
@@ -108,8 +123,6 @@ public class AppInstallService
 
     public List<AppPackageInfo> GetAllApps()
     {
-        var installed = GetInstalledPackages();
-
         var appsToCheck = new List<AppPackageInfo>
         {
             new AppPackageInfo
@@ -128,22 +141,21 @@ public class AppInstallService
 
         foreach (var app in appsToCheck)
         {
-            app.IsInstalled = installed.Contains(app.PackageName);
+            var status = GetInstallStatus(app.PackageName);
+            app.IsInstalled = status.IsInstalled;
             app.IsSelected = !app.IsInstalled;
-
-            var installedVersion = app.IsInstalled ? GetInstalledVersion(app.PackageName) : null;
-            app.InstalledVersionCode = installedVersion?.VersionCode;
-            app.InstalledVersionName = installedVersion?.VersionName;
+            app.InstalledVersionCode = status.VersionCode;
+            app.InstalledVersionName = status.VersionName;
         }
 
         return appsToCheck;
     }
 
-    public async Task<AppInstallResult> InstallAppAsync(AppPackageInfo app)
+    public async Task<AppInstallResult> InstallAppAsync(AppPackageInfo app, IProgress<(long BytesRead, long? TotalBytes)>? progress = null)
     {
         try
         {
-            var apkPath = await DownloadLatestApkAsync(app);
+            var apkPath = await DownloadLatestApkAsync(app, progress);
 
             if (string.IsNullOrEmpty(apkPath))
             {
@@ -187,7 +199,7 @@ public class AppInstallService
         }
     }
 
-    private async Task<string?> DownloadLatestApkAsync(AppPackageInfo app)
+    private async Task<string?> DownloadLatestApkAsync(AppPackageInfo app, IProgress<(long BytesRead, long? TotalBytes)>? progress = null)
     {
         try
         {
@@ -215,7 +227,7 @@ public class AppInstallService
                     {
                         var apkPath = Path.Combine(_apkFolderPath, app.ApkFilename);
 
-                        var downloadResponse = await _httpClient.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead);
+                        using var downloadResponse = await _httpClient.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead);
 
                         if (!downloadResponse.IsSuccessStatusCode)
                         {
@@ -223,8 +235,7 @@ public class AppInstallService
                             return null;
                         }
 
-                        var apkBytes = await downloadResponse.Content.ReadAsByteArrayAsync();
-                        await System.IO.File.WriteAllBytesAsync(apkPath, apkBytes);
+                        await StreamToFileAsync(downloadResponse, apkPath, progress);
 
                         return apkPath;
                     }
@@ -239,6 +250,44 @@ public class AppInstallService
             await ShowToastAsync($"Download failed: {ex.Message}");
             return null;
         }
+    }
+
+    private static async Task StreamToFileAsync(HttpResponseMessage downloadResponse, string apkPath, IProgress<(long BytesRead, long? TotalBytes)>? progress)
+    {
+        var totalBytes = downloadResponse.Content.Headers.ContentLength;
+
+        await using var contentStream = await downloadResponse.Content.ReadAsStreamAsync();
+        await using var fileStream = new System.IO.FileStream(apkPath, System.IO.FileMode.Create, System.IO.FileAccess.Write, System.IO.FileShare.None, 81920, useAsync: true);
+
+        var buffer = new byte[81920];
+        long totalRead = 0;
+        int bytesRead;
+        var lastReportedPercent = -1;
+        var lastReportedBytes = 0L;
+        const long reportByteThreshold = 262_144; // 256 KB, used only when the server doesn't send Content-Length
+
+        while ((bytesRead = await contentStream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+        {
+            await fileStream.WriteAsync(buffer, 0, bytesRead);
+            totalRead += bytesRead;
+
+            if (progress == null) continue;
+
+            if (totalBytes is > 0)
+            {
+                var percent = (int)(totalRead * 100 / totalBytes.Value);
+                if (percent == lastReportedPercent) continue;
+                lastReportedPercent = percent;
+                progress.Report((totalRead, totalBytes));
+            }
+            else if (totalRead - lastReportedBytes >= reportByteThreshold)
+            {
+                lastReportedBytes = totalRead;
+                progress.Report((totalRead, null));
+            }
+        }
+
+        progress?.Report((totalRead, totalBytes));
     }
 
     private async Task<bool> OpenInstallerAsync(string apkPath)
