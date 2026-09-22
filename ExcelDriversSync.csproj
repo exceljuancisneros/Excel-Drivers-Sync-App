@@ -16,7 +16,7 @@
 		<!-- Display name -->
 		<ApplicationTitle>ExcelDriversSync</ApplicationTitle>
 		<ApplicationId>com.excelware.driverssync</ApplicationId>
-		<ApplicationDisplayVersion>1.0.1</ApplicationDisplayVersion>
+		<ApplicationDisplayVersion>1.0.0</ApplicationDisplayVersion>
 		<ApplicationVersion>9</ApplicationVersion>
 
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">21.0</SupportedOSPlatformVersion>

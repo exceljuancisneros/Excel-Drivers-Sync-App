@@ -19,7 +19,9 @@ public enum AppInstallResult
 
 public class AppInstallService
 {
-    private const string ReleasesLatestUrl = "https://api.github.com/repos/exceljuancisneros/Excel-Drivers-Sync-App/releases/latest";
+    // Driver-app binaries (Samsara Driver, ePOD) live on a fixed "driver-apps" tag, not
+    // /releases/latest - that endpoint is reserved for the sync tool's own app releases.
+    private const string DriverAppsReleaseUrl = "https://api.github.com/repos/exceljuancisneros/Excel-Drivers-Sync-App/releases/tags/driver-apps";
 
     private readonly string _apkFolderPath;
     private readonly HttpClient _httpClient;
@@ -155,7 +157,7 @@ public class AppInstallService
     {
         try
         {
-            var apkPath = await DownloadLatestApkAsync(app, progress);
+            var apkPath = await DownloadDriverApkAsync(app, progress);
 
             if (string.IsNullOrEmpty(apkPath))
             {
@@ -199,15 +201,15 @@ public class AppInstallService
         }
     }
 
-    private async Task<string?> DownloadLatestApkAsync(AppPackageInfo app, IProgress<(long BytesRead, long? TotalBytes)>? progress = null)
+    private async Task<string?> DownloadDriverApkAsync(AppPackageInfo app, IProgress<(long BytesRead, long? TotalBytes)>? progress = null)
     {
         try
         {
-            var response = await _httpClient.GetAsync(ReleasesLatestUrl);
+            var response = await _httpClient.GetAsync(DriverAppsReleaseUrl);
 
             if (!response.IsSuccessStatusCode)
             {
-                await ShowToastAsync("Failed to get latest release from GitHub");
+                await ShowToastAsync("Failed to get driver-apps release from GitHub");
                 return null;
             }
 
@@ -242,7 +244,7 @@ public class AppInstallService
                 }
             }
 
-            await ShowToastAsync($"No {app.ApkFilename} found in the latest release");
+            await ShowToastAsync($"No {app.ApkFilename} found in the driver-apps release");
             return null;
         }
         catch (Exception ex)
